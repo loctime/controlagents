@@ -3,7 +3,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { getColorizedSprite } from '../colorize.js';
 import { getColorizedFloorSprite, getFloorPatternCount, hasFloorSprites } from '../floorTiles.js';
 import type { FurnitureCategory, LoadedAssetData } from '../layout/furnitureCatalog.js';
-import { getWallSetCount, getWallSetPreviewSprite } from '../wallTiles.js';
 import {
   buildDynamicCatalog,
   getActiveCategories,
@@ -12,6 +11,7 @@ import {
 import { getCachedSprite } from '../sprites/spriteCache.js';
 import type { FloorColor, TileType as TileTypeVal } from '../types.js';
 import { EditTool } from '../types.js';
+import { getWallSetCount, getWallSetPreviewSprite } from '../wallTiles.js';
 
 const btnStyle: React.CSSProperties = {
   padding: '3px 8px',

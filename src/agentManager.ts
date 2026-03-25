@@ -14,9 +14,13 @@ import { migrateAndLoadLayout } from './layoutPersistence.js';
 import { cancelPermissionTimer, cancelWaitingTimer } from './timerManager.js';
 import type { AgentState, PersistedAgent } from './types.js';
 
-export function getProjectDirPath(cwd?: string): string | null {
-  const workspacePath = cwd || vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-  if (!workspacePath) return null;
+export function getProjectDirPath(cwd?: string): string {
+  // Fall back to home directory when no workspace folder is open.
+  // This is the common case on Linux/macOS when VS Code is launched without a folder
+  // (e.g. `code` with no arguments). Claude Code writes JSONL files to
+  // ~/.claude/projects/<hash>/ where <hash> is derived from the process cwd, so we
+  // must use the same directory as the terminal's working directory.
+  const workspacePath = cwd || vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || os.homedir();
   const dirName = workspacePath.replace(/[^a-zA-Z0-9-]/g, '-');
   const projectDir = path.join(os.homedir(), '.claude', 'projects', dirName);
   console.log(`[Pixel Agents] Project dir: ${workspacePath} → ${dirName}`);
@@ -41,7 +45,10 @@ export async function launchNewTerminal(
   bypassPermissions?: boolean,
 ): Promise<void> {
   const folders = vscode.workspace.workspaceFolders;
-  const cwd = folderPath || folders?.[0]?.uri.fsPath;
+  // Use home directory as fallback cwd when no workspace is open (common on Linux/macOS).
+  // This ensures the terminal starts in a predictable location that matches the project
+  // dir hash Claude Code will use for JSONL transcript files.
+  const cwd = folderPath || folders?.[0]?.uri.fsPath || os.homedir();
   const isMultiRoot = !!(folders && folders.length > 1);
   const idx = nextTerminalIndexRef.current++;
   const terminal = vscode.window.createTerminal({
@@ -57,10 +64,6 @@ export async function launchNewTerminal(
   terminal.sendText(claudeCmd);
 
   const projectDir = getProjectDirPath(cwd);
-  if (!projectDir) {
-    console.log(`[Pixel Agents] No project dir, cannot track agent`);
-    return;
-  }
 
   // Pre-register expected JSONL file so project scan won't treat it as a /clear file
   const expectedFile = path.join(projectDir, `${sessionId}.jsonl`);
