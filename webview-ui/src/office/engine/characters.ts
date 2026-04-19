@@ -1,6 +1,7 @@
 import {
   SEAT_REST_MAX_SEC,
   SEAT_REST_MIN_SEC,
+  SLEEP_PULSE_PERIOD_SEC,
   TYPE_FRAME_DURATION_SEC,
   WALK_FRAME_DURATION_SEC,
   WALK_SPEED_PX_PER_SEC,
@@ -112,6 +113,34 @@ export function updateCharacter(
           break;
         }
         ch.seatTimer = 0; // clear sentinel
+        ch.state = CharacterState.IDLE;
+        ch.frame = 0;
+        ch.frameTimer = 0;
+        ch.wanderTimer = randomRange(WANDER_PAUSE_MIN_SEC, WANDER_PAUSE_MAX_SEC);
+        ch.wanderCount = 0;
+        ch.wanderLimit = randomInt(WANDER_MOVES_BEFORE_REST_MIN, WANDER_MOVES_BEFORE_REST_MAX);
+      }
+      break;
+    }
+
+    case CharacterState.SLEEP: {
+      // Accumulate time for Zzz pulse animation
+      ch.frameTimer += dt;
+      if (ch.frameTimer >= SLEEP_PULSE_PERIOD_SEC) {
+        ch.frameTimer -= SLEEP_PULSE_PERIOD_SEC;
+      }
+      ch.frame = 0;
+      // Wake up when agent becomes active
+      if (ch.isActive) {
+        ch.state = CharacterState.TYPE;
+        ch.frame = 0;
+        ch.frameTimer = 0;
+        break;
+      }
+      // Count down rest timer, then go wander
+      ch.seatTimer -= dt;
+      if (ch.seatTimer <= 0) {
+        ch.seatTimer = 0;
         ch.state = CharacterState.IDLE;
         ch.frame = 0;
         ch.frameTimer = 0;
@@ -237,19 +266,11 @@ export function updateCharacter(
             }
           }
         } else {
-          // Check if arrived at assigned seat — sit down for a rest before wandering again
+          // Check if arrived at assigned seat — rest before wandering again
           if (ch.seatId) {
             const seat = seats.get(ch.seatId);
             if (seat && ch.tileCol === seat.seatCol && ch.tileRow === seat.seatRow) {
-              ch.state = CharacterState.TYPE;
               ch.dir = seat.facingDir;
-              // seatTimer < 0 is a sentinel from setAgentActive(false) meaning
-              // "turn just ended" — skip the long rest so idle transition is immediate
-              if (ch.seatTimer < 0) {
-                ch.seatTimer = 0;
-              } else {
-                ch.seatTimer = randomRange(SEAT_REST_MIN_SEC, SEAT_REST_MAX_SEC);
-              }
               ch.wanderCount = 0;
               ch.wanderLimit = randomInt(
                 WANDER_MOVES_BEFORE_REST_MIN,
@@ -257,6 +278,19 @@ export function updateCharacter(
               );
               ch.frame = 0;
               ch.frameTimer = 0;
+              // seatTimer < 0 is a sentinel from setAgentActive(false) meaning
+              // "turn just ended" — skip the long rest, go idle immediately
+              if (ch.seatTimer < 0) {
+                ch.seatTimer = 0;
+                ch.state = CharacterState.IDLE;
+                ch.wanderTimer = randomRange(WANDER_PAUSE_MIN_SEC, WANDER_PAUSE_MAX_SEC);
+              } else {
+                // Natural wander return — sleep at desk for the long rest period
+                ch.state = CharacterState.SLEEP;
+                ch.dir = Direction.DOWN;
+                ch.frameTimer = 0;
+                ch.seatTimer = randomRange(SEAT_REST_MIN_SEC, SEAT_REST_MAX_SEC);
+              }
               break;
             }
           }
@@ -326,6 +360,9 @@ export function getCharacterSprite(ch: Character, sprites: CharacterSprites): Sp
       return sprites.typing[ch.dir][ch.frame % 2];
     case CharacterState.WALK:
       return sprites.walk[ch.dir][ch.frame % 4];
+    case CharacterState.SLEEP:
+      // Static seated pose (frame 0 of typing) — looks slumped at desk
+      return sprites.typing[ch.dir][0];
     case CharacterState.IDLE:
       return sprites.walk[ch.dir][1];
     default:
