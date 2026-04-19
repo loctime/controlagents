@@ -18,6 +18,9 @@ export const WANDER_MOVES_BEFORE_REST_MAX = 6;
 export const SEAT_REST_MIN_SEC = 120.0;
 export const SEAT_REST_MAX_SEC = 240.0;
 export const SLEEP_PULSE_PERIOD_SEC = 2.0;
+export const ALERT_WALK_FRAME_SEC = 0.1;
+export const ALERT_JUMP_AMPLITUDE_PX = 4;
+export const ALERT_JUMP_PERIOD_SEC = 0.45;
 
 // ── Matrix Effect ────────────────────────────────────────────
 export const MATRIX_EFFECT_DURATION_SEC = 0.3;

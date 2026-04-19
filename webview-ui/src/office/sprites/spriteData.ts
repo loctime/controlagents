@@ -3,6 +3,7 @@ import { PALETTE_COUNT } from '../../constants.js';
 import { adjustSprite } from '../colorize.js';
 import type { Direction, SpriteData } from '../types.js';
 import { Direction as Dir } from '../types.js';
+import bubbleAlertData from './bubble-alert.json';
 import bubblePermissionData from './bubble-permission.json';
 import bubbleSleepingData from './bubble-sleeping.json';
 import bubbleWaitingData from './bubble-waiting.json';
@@ -26,6 +27,9 @@ export const BUBBLE_WAITING_SPRITE: SpriteData = resolveBubbleSprite(bubbleWaiti
 
 /** Sleeping bubble: light-blue square with "Zzz" in blue, and a tail pointer (11x13) */
 export const BUBBLE_SLEEPING_SPRITE: SpriteData = resolveBubbleSprite(bubbleSleepingData);
+
+/** Alert bubble: red square with white "!" — urgent permission request (11x13) */
+export const BUBBLE_ALERT_SPRITE: SpriteData = resolveBubbleSprite(bubbleAlertData);
 
 // ════════════════════════════════════════════════════════════════
 // Loaded character sprites (from PNG assets)

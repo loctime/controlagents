@@ -653,6 +653,13 @@ export class OfficeState {
     if (ch) {
       ch.bubbleType = 'permission';
       ch.bubbleTimer = 0;
+      // Stop whatever they were doing and jump in place facing the user
+      ch.state = CharacterState.ALERT;
+      ch.dir = Direction.DOWN;
+      ch.path = [];
+      ch.moveProgress = 0;
+      ch.frame = 0;
+      ch.frameTimer = 0;
     }
   }
 
@@ -661,6 +668,37 @@ export class OfficeState {
     if (ch && ch.bubbleType === 'permission') {
       ch.bubbleType = null;
       ch.bubbleTimer = 0;
+      // Return to work or idle depending on whether a new turn started
+      if (ch.state === CharacterState.ALERT) {
+        if (ch.isActive) {
+          // Walk back to seat and resume typing
+          if (ch.seatId) {
+            const seat = this.seats.get(ch.seatId);
+            if (seat) {
+              const path = this.withOwnSeatUnblocked(ch, () =>
+                findPath(ch.tileCol, ch.tileRow, seat.seatCol, seat.seatRow, this.tileMap, this.blockedTiles),
+              );
+              if (path.length > 0) {
+                ch.path = path;
+                ch.moveProgress = 0;
+                ch.state = CharacterState.WALK;
+                ch.frame = 0;
+                ch.frameTimer = 0;
+              } else {
+                ch.state = CharacterState.TYPE;
+                ch.dir = seat.facingDir;
+              }
+              return;
+            }
+          }
+          ch.state = CharacterState.TYPE;
+        } else {
+          ch.state = CharacterState.IDLE;
+          ch.wanderTimer = 0;
+        }
+        ch.frame = 0;
+        ch.frameTimer = 0;
+      }
     }
   }
 
@@ -672,13 +710,12 @@ export class OfficeState {
     }
   }
 
-  /** Dismiss bubble on click — permission: instant, waiting: quick fade */
+  /** Dismiss bubble on click — permission: instant (exits ALERT), waiting: quick fade */
   dismissBubble(id: number): void {
     const ch = this.characters.get(id);
     if (!ch || !ch.bubbleType) return;
     if (ch.bubbleType === 'permission') {
-      ch.bubbleType = null;
-      ch.bubbleTimer = 0;
+      this.clearPermissionBubble(id);
     } else if (ch.bubbleType === 'waiting') {
       // Trigger immediate fade (0.3s remaining)
       ch.bubbleTimer = Math.min(ch.bubbleTimer, DISMISS_BUBBLE_FAST_FADE_SEC);

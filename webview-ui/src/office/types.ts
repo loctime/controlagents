@@ -31,6 +31,7 @@ export const CharacterState = {
   WALK: 'walk',
   TYPE: 'type',
   SLEEP: 'sleep',
+  ALERT: 'alert',
 } as const;
 export type CharacterState = (typeof CharacterState)[keyof typeof CharacterState];
 

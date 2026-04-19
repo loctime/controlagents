@@ -1,5 +1,7 @@
 import type { ColorValue } from '../../components/ui/types.js';
 import {
+  ALERT_JUMP_AMPLITUDE_PX,
+  ALERT_JUMP_PERIOD_SEC,
   BUBBLE_FADE_DURATION_SEC,
   BUBBLE_SITTING_OFFSET_PX,
   BUBBLE_VERTICAL_OFFSET_PX,
@@ -37,6 +39,7 @@ import {
 import { getColorizedFloorSprite, hasFloorSprites, WALL_COLOR } from '../floorTiles.js';
 import { getCachedSprite, getOutlineSprite } from '../sprites/spriteCache.js';
 import {
+  BUBBLE_ALERT_SPRITE,
   BUBBLE_PERMISSION_SPRITE,
   BUBBLE_SLEEPING_SPRITE,
   BUBBLE_WAITING_SPRITE,
@@ -157,9 +160,15 @@ export function renderScene(
       ch.state === CharacterState.TYPE || ch.state === CharacterState.SLEEP
         ? CHARACTER_SITTING_OFFSET_PX
         : 0;
+    // Jump offset for ALERT state — bounces upward using bubbleTimer as phase
+    const jumpOffset =
+      ch.state === CharacterState.ALERT
+        ? -Math.abs(Math.sin((ch.bubbleTimer / ALERT_JUMP_PERIOD_SEC) * Math.PI)) *
+          ALERT_JUMP_AMPLITUDE_PX
+        : 0;
     // Anchor at bottom-center of character — round to integer device pixels
     const drawX = Math.round(offsetX + ch.x * zoom - cached.width / 2);
-    const drawY = Math.round(offsetY + (ch.y + sittingOffset) * zoom - cached.height);
+    const drawY = Math.round(offsetY + (ch.y + sittingOffset + jumpOffset) * zoom - cached.height);
 
     // Sort characters by bottom of their tile (not center) so they render
     // in front of same-row furniture (e.g. chairs) but behind furniture
@@ -502,7 +511,10 @@ function renderBubbles(
     let sprite: SpriteData | null = null;
     let alpha = 1.0;
 
-    if (ch.bubbleType === 'permission') {
+    if (ch.state === CharacterState.ALERT) {
+      // Red "!" alert bubble — replaces permission dots while jumping
+      sprite = BUBBLE_ALERT_SPRITE;
+    } else if (ch.bubbleType === 'permission') {
       sprite = BUBBLE_PERMISSION_SPRITE;
     } else if (ch.bubbleType === 'waiting') {
       sprite = BUBBLE_WAITING_SPRITE;
@@ -519,16 +531,22 @@ function renderBubbles(
     if (!sprite) continue;
 
     const cached = getCachedSprite(sprite, zoom);
-    // Position: centered above the character's head
-    // Character is anchored bottom-center at (ch.x, ch.y), sprite is 16x24
-    // Place bubble above head with a small gap; follow sitting offset
+    // Position: centered above the character's head; follows sitting offset and jump
     const sittingOff =
       ch.state === CharacterState.TYPE || ch.state === CharacterState.SLEEP
         ? BUBBLE_SITTING_OFFSET_PX
         : 0;
+    const alertJump =
+      ch.state === CharacterState.ALERT
+        ? -Math.abs(Math.sin((ch.bubbleTimer / ALERT_JUMP_PERIOD_SEC) * Math.PI)) *
+          ALERT_JUMP_AMPLITUDE_PX
+        : 0;
     const bubbleX = Math.round(offsetX + ch.x * zoom - cached.width / 2);
     const bubbleY = Math.round(
-      offsetY + (ch.y + sittingOff - BUBBLE_VERTICAL_OFFSET_PX) * zoom - cached.height - 1 * zoom,
+      offsetY +
+        (ch.y + sittingOff + alertJump - BUBBLE_VERTICAL_OFFSET_PX) * zoom -
+        cached.height -
+        1 * zoom,
     );
 
     ctx.save();

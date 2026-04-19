@@ -1,4 +1,6 @@
 import {
+  ALERT_JUMP_PERIOD_SEC,
+  ALERT_WALK_FRAME_SEC,
   SEAT_REST_MAX_SEC,
   SEAT_REST_MIN_SEC,
   SLEEP_PULSE_PERIOD_SEC,
@@ -119,6 +121,21 @@ export function updateCharacter(
         ch.wanderTimer = randomRange(WANDER_PAUSE_MIN_SEC, WANDER_PAUSE_MAX_SEC);
         ch.wanderCount = 0;
         ch.wanderLimit = randomInt(WANDER_MOVES_BEFORE_REST_MIN, WANDER_MOVES_BEFORE_REST_MAX);
+      }
+      break;
+    }
+
+    case CharacterState.ALERT: {
+      // Fast walk animation — frantic look
+      ch.frameTimer += dt;
+      if (ch.frameTimer >= ALERT_WALK_FRAME_SEC) {
+        ch.frameTimer -= ALERT_WALK_FRAME_SEC;
+        ch.frame = (ch.frame + 1) % 4;
+      }
+      // bubbleTimer doubles as jump phase accumulator (safe: permission sets it to 0)
+      ch.bubbleTimer += dt;
+      if (ch.bubbleTimer >= ALERT_JUMP_PERIOD_SEC) {
+        ch.bubbleTimer -= ALERT_JUMP_PERIOD_SEC;
       }
       break;
     }
@@ -359,6 +376,9 @@ export function getCharacterSprite(ch: Character, sprites: CharacterSprites): Sp
       }
       return sprites.typing[ch.dir][ch.frame % 2];
     case CharacterState.WALK:
+      return sprites.walk[ch.dir][ch.frame % 4];
+    case CharacterState.ALERT:
+      // Fast walk frames while jumping (frantic waving look)
       return sprites.walk[ch.dir][ch.frame % 4];
     case CharacterState.SLEEP:
       // Static seated pose (frame 0 of typing) — looks slumped at desk

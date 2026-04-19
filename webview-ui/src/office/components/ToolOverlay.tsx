@@ -46,7 +46,7 @@ function getActivityText(
     // Find the latest non-done tool
     const activeTool = [...tools].reverse().find((t) => !t.done);
     if (activeTool) {
-      if (activeTool.permissionWait) return 'Needs approval';
+      if (activeTool.permissionWait) return 'Waiting for you!';
       return activeTool.status;
     }
     // All tools done but agent still active (mid-turn) — keep showing last tool status
@@ -119,8 +119,11 @@ export function ToolOverlay({
         // Only show for hovered or selected agents (unless always-show is on)
         if (!alwaysShowOverlay && !isSelected && !isHovered) return null;
 
-        // Position above character
-        const sittingOffset = ch.state === CharacterState.TYPE ? CHARACTER_SITTING_OFFSET_PX : 0;
+        // Position above character (TYPE and SLEEP are seated; ALERT has no sitting offset)
+        const sittingOffset =
+          ch.state === CharacterState.TYPE || ch.state === CharacterState.SLEEP
+            ? CHARACTER_SITTING_OFFSET_PX
+            : 0;
         const screenX = (deviceOffsetX + ch.x * zoom) / dpr;
         const screenY =
           (deviceOffsetY + (ch.y + sittingOffset - TOOL_OVERLAY_VERTICAL_OFFSET) * zoom) / dpr;
@@ -130,7 +133,7 @@ export function ToolOverlay({
         let activityText: string;
         if (isSub) {
           if (subHasPermission) {
-            activityText = 'Needs approval';
+            activityText = 'Waiting for you!';
           } else {
             const sub = subagentCharacters.find((s) => s.id === id);
             activityText = sub ? sub.label : 'Subtask';
@@ -174,7 +177,7 @@ export function ToolOverlay({
             <div className="flex items-center border-border px-8 pt-2 pb-4 gap-5 pixel-panel whitespace-nowrap max-w-2xs">
               {dotColor && (
                 <span
-                  className={`w-6 h-6 rounded-full shrink-0 ${isActive && !hasPermission ? 'pixel-pulse' : ''}`}
+                  className={`w-6 h-6 rounded-full shrink-0 ${isActive || hasPermission ? 'pixel-pulse' : ''}`}
                   style={{ background: dotColor }}
                 />
               )}
@@ -192,10 +195,12 @@ export function ToolOverlay({
                   </span>
                 )}
                 <span
-                  className="overflow-hidden text-ellipsis block leading-none"
+                  className={`overflow-hidden text-ellipsis block leading-none${hasPermission ? ' pixel-pulse' : ''}`}
                   style={{
                     fontSize: isSub ? '20px' : '22px',
                     fontStyle: isSub ? 'italic' : undefined,
+                    color: hasPermission ? 'var(--color-status-permission)' : undefined,
+                    fontWeight: hasPermission ? 'bold' : undefined,
                   }}
                 >
                   {activityText}
