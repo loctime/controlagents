@@ -6,6 +6,7 @@ import {
   BUBBLE_SITTING_OFFSET_PX,
   BUBBLE_VERTICAL_OFFSET_PX,
   SLEEP_PULSE_PERIOD_SEC,
+  WAKE_DURATION_SEC,
   BUTTON_ICON_COLOR,
   BUTTON_ICON_SIZE_FACTOR,
   BUTTON_LINE_WIDTH_MIN,
@@ -526,6 +527,10 @@ function renderBubbles(
       sprite = BUBBLE_SLEEPING_SPRITE;
       const t = ch.frameTimer / SLEEP_PULSE_PERIOD_SEC;
       alpha = 0.35 + 0.65 * (1 - Math.cos(t * Math.PI * 2)) / 2;
+    } else if (ch.state === CharacterState.WAKE) {
+      // Zzz fades out as the agent wakes up
+      sprite = BUBBLE_SLEEPING_SPRITE;
+      alpha = Math.max(0, ch.seatTimer / WAKE_DURATION_SEC);
     }
 
     if (!sprite) continue;

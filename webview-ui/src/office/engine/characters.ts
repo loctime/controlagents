@@ -1,10 +1,14 @@
 import {
   ALERT_JUMP_PERIOD_SEC,
   ALERT_WALK_FRAME_SEC,
+  RUN_FRAME_DURATION_SEC,
+  RUN_SPEED_PX_PER_SEC,
   SEAT_REST_MAX_SEC,
   SEAT_REST_MIN_SEC,
   SLEEP_PULSE_PERIOD_SEC,
   TYPE_FRAME_DURATION_SEC,
+  WAKE_DURATION_SEC,
+  WAKE_FRAME_DURATION_SEC,
   WALK_FRAME_DURATION_SEC,
   WALK_SPEED_PX_PER_SEC,
   WANDER_MOVES_BEFORE_REST_MAX,
@@ -147,11 +151,12 @@ export function updateCharacter(
         ch.frameTimer -= SLEEP_PULSE_PERIOD_SEC;
       }
       ch.frame = 0;
-      // Wake up when agent becomes active
+      // Wake up when agent becomes active — brief WAKE animation before working
       if (ch.isActive) {
-        ch.state = CharacterState.TYPE;
+        ch.state = CharacterState.WAKE;
         ch.frame = 0;
         ch.frameTimer = 0;
+        ch.seatTimer = WAKE_DURATION_SEC;
         break;
       }
       // Count down rest timer, then go wander
@@ -164,6 +169,33 @@ export function updateCharacter(
         ch.wanderTimer = randomRange(WANDER_PAUSE_MIN_SEC, WANDER_PAUSE_MAX_SEC);
         ch.wanderCount = 0;
         ch.wanderLimit = randomInt(WANDER_MOVES_BEFORE_REST_MIN, WANDER_MOVES_BEFORE_REST_MAX);
+      }
+      break;
+    }
+
+    case CharacterState.WAKE: {
+      // Wobble awake — rapid frame alternation before getting back to work
+      if (!ch.isActive) {
+        // Turn ended during wake (edge case) — stand down
+        ch.state = CharacterState.IDLE;
+        ch.frame = 0;
+        ch.frameTimer = 0;
+        ch.wanderTimer = randomRange(WANDER_PAUSE_MIN_SEC, WANDER_PAUSE_MAX_SEC);
+        ch.wanderCount = 0;
+        ch.wanderLimit = randomInt(WANDER_MOVES_BEFORE_REST_MIN, WANDER_MOVES_BEFORE_REST_MAX);
+        break;
+      }
+      ch.frameTimer += dt;
+      if (ch.frameTimer >= WAKE_FRAME_DURATION_SEC) {
+        ch.frameTimer -= WAKE_FRAME_DURATION_SEC;
+        ch.frame = (ch.frame + 1) % 2;
+      }
+      ch.seatTimer -= dt;
+      if (ch.seatTimer <= 0) {
+        ch.state = CharacterState.TYPE;
+        ch.frame = 0;
+        ch.frameTimer = 0;
+        ch.seatTimer = 0;
       }
       break;
     }
@@ -257,9 +289,11 @@ export function updateCharacter(
     }
 
     case CharacterState.WALK: {
-      // Walk animation
-      if (ch.frameTimer >= WALK_FRAME_DURATION_SEC) {
-        ch.frameTimer -= WALK_FRAME_DURATION_SEC;
+      // Run when active (going to work), walk otherwise (wandering/returning to rest)
+      const moveDur = ch.isActive ? RUN_FRAME_DURATION_SEC : WALK_FRAME_DURATION_SEC;
+      const moveSpeed = ch.isActive ? RUN_SPEED_PX_PER_SEC : WALK_SPEED_PX_PER_SEC;
+      if (ch.frameTimer >= moveDur) {
+        ch.frameTimer -= moveDur;
         ch.frame = (ch.frame + 1) % 4;
       }
 
@@ -323,7 +357,7 @@ export function updateCharacter(
       const nextTile = ch.path[0];
       ch.dir = directionBetween(ch.tileCol, ch.tileRow, nextTile.col, nextTile.row);
 
-      ch.moveProgress += (WALK_SPEED_PX_PER_SEC / TILE_SIZE) * dt;
+      ch.moveProgress += (moveSpeed / TILE_SIZE) * dt;
 
       const fromCenter = tileCenter(ch.tileCol, ch.tileRow);
       const toCenter = tileCenter(nextTile.col, nextTile.row);
@@ -377,6 +411,9 @@ export function getCharacterSprite(ch: Character, sprites: CharacterSprites): Sp
       return sprites.typing[ch.dir][ch.frame % 2];
     case CharacterState.WALK:
       return sprites.walk[ch.dir][ch.frame % 4];
+    case CharacterState.WAKE:
+      // Wobble between frames 0-1 (groggy stand-up)
+      return sprites.walk[ch.dir][ch.frame % 2];
     case CharacterState.ALERT:
       // Fast walk frames while jumping (frantic waving look)
       return sprites.walk[ch.dir][ch.frame % 4];
