@@ -182,6 +182,7 @@ export function ToolOverlay({
                 />
               )}
               <div className="flex flex-col gap-0 overflow-hidden">
+                {/* Team role label (team agents only) */}
                 {teamRoleLabel && (
                   <span
                     className="overflow-hidden text-ellipsis block leading-none"
@@ -194,22 +195,31 @@ export function ToolOverlay({
                     {teamRoleLabel}
                   </span>
                 )}
+                {/* Folder/repo name as primary agent identity (non-team agents) */}
+                {!isTeamAgent && ch.folderName && (
+                  <span
+                    className="overflow-hidden text-ellipsis block leading-none"
+                    style={{ fontSize: '20px', color: 'var(--color-status-active)' }}
+                  >
+                    {ch.folderName}
+                  </span>
+                )}
+                {/* Activity status */}
                 <span
                   className={`overflow-hidden text-ellipsis block leading-none${hasPermission ? ' pixel-pulse' : ''}`}
                   style={{
-                    fontSize: isSub ? '20px' : '22px',
+                    fontSize: isSub ? '18px' : !isTeamAgent && ch.folderName ? '16px' : '22px',
                     fontStyle: isSub ? 'italic' : undefined,
-                    color: hasPermission ? 'var(--color-status-permission)' : undefined,
+                    color: hasPermission
+                      ? 'var(--color-status-permission)'
+                      : !isTeamAgent && ch.folderName
+                        ? 'var(--color-text-muted)'
+                        : undefined,
                     fontWeight: hasPermission ? 'bold' : undefined,
                   }}
                 >
                   {activityText}
                 </span>
-                {ch.folderName && (
-                  <span className="text-2xs leading-none overflow-hidden text-ellipsis block">
-                    {ch.folderName}
-                  </span>
-                )}
               </div>
               {isSelected && !isSub && (
                 <Button
