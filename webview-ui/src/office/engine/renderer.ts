@@ -3,6 +3,7 @@ import {
   BUBBLE_FADE_DURATION_SEC,
   BUBBLE_SITTING_OFFSET_PX,
   BUBBLE_VERTICAL_OFFSET_PX,
+  SLEEP_PULSE_PERIOD_SEC,
   BUTTON_ICON_COLOR,
   BUTTON_ICON_SIZE_FACTOR,
   BUTTON_LINE_WIDTH_MIN,
@@ -509,8 +510,10 @@ function renderBubbles(
         alpha = ch.bubbleTimer / BUBBLE_FADE_DURATION_SEC;
       }
     } else if (ch.state === CharacterState.SLEEP) {
-      // Show Zzz only when no other bubble is active
+      // Zzz pulses between 0.35 and 1.0 with a smooth sine wave
       sprite = BUBBLE_SLEEPING_SPRITE;
+      const t = ch.frameTimer / SLEEP_PULSE_PERIOD_SEC;
+      alpha = 0.35 + 0.65 * (1 - Math.cos(t * Math.PI * 2)) / 2;
     }
 
     if (!sprite) continue;

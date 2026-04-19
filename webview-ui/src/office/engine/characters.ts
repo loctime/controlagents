@@ -1,6 +1,7 @@
 import {
   SEAT_REST_MAX_SEC,
   SEAT_REST_MIN_SEC,
+  SLEEP_PULSE_PERIOD_SEC,
   TYPE_FRAME_DURATION_SEC,
   WALK_FRAME_DURATION_SEC,
   WALK_SPEED_PX_PER_SEC,
@@ -123,9 +124,12 @@ export function updateCharacter(
     }
 
     case CharacterState.SLEEP: {
-      // Static seated pose — no animation
+      // Accumulate time for Zzz pulse animation
+      ch.frameTimer += dt;
+      if (ch.frameTimer >= SLEEP_PULSE_PERIOD_SEC) {
+        ch.frameTimer -= SLEEP_PULSE_PERIOD_SEC;
+      }
       ch.frame = 0;
-      ch.frameTimer = 0;
       // Wake up when agent becomes active
       if (ch.isActive) {
         ch.state = CharacterState.TYPE;
@@ -283,6 +287,8 @@ export function updateCharacter(
               } else {
                 // Natural wander return — sleep at desk for the long rest period
                 ch.state = CharacterState.SLEEP;
+                ch.dir = Direction.DOWN;
+                ch.frameTimer = 0;
                 ch.seatTimer = randomRange(SEAT_REST_MIN_SEC, SEAT_REST_MAX_SEC);
               }
               break;
