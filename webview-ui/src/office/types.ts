@@ -30,6 +30,7 @@ export const CharacterState = {
   IDLE: 'idle',
   WALK: 'walk',
   TYPE: 'type',
+  SLEEP: 'sleep',
 } as const;
 export type CharacterState = (typeof CharacterState)[keyof typeof CharacterState];
 

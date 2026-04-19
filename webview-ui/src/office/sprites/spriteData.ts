@@ -4,6 +4,7 @@ import { adjustSprite } from '../colorize.js';
 import type { Direction, SpriteData } from '../types.js';
 import { Direction as Dir } from '../types.js';
 import bubblePermissionData from './bubble-permission.json';
+import bubbleSleepingData from './bubble-sleeping.json';
 import bubbleWaitingData from './bubble-waiting.json';
 
 // ── Speech Bubble Sprites ───────────────────────────────────────
@@ -22,6 +23,9 @@ export const BUBBLE_PERMISSION_SPRITE: SpriteData = resolveBubbleSprite(bubblePe
 
 /** Waiting bubble: white square with green checkmark, and a tail pointer (11x13) */
 export const BUBBLE_WAITING_SPRITE: SpriteData = resolveBubbleSprite(bubbleWaitingData);
+
+/** Sleeping bubble: light-blue square with "Zzz" in blue, and a tail pointer (11x13) */
+export const BUBBLE_SLEEPING_SPRITE: SpriteData = resolveBubbleSprite(bubbleSleepingData);
 
 // ════════════════════════════════════════════════════════════════
 // Loaded character sprites (from PNG assets)

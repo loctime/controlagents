@@ -37,6 +37,7 @@ import { getColorizedFloorSprite, hasFloorSprites, WALL_COLOR } from '../floorTi
 import { getCachedSprite, getOutlineSprite } from '../sprites/spriteCache.js';
 import {
   BUBBLE_PERMISSION_SPRITE,
+  BUBBLE_SLEEPING_SPRITE,
   BUBBLE_WAITING_SPRITE,
   getCharacterSprites,
 } from '../sprites/spriteData.js';
@@ -150,8 +151,11 @@ export function renderScene(
     const sprites = getCharacterSprites(ch.palette, ch.hueShift);
     const spriteData = getCharacterSprite(ch, sprites);
     const cached = getCachedSprite(spriteData, zoom);
-    // Sitting offset: shift character down when seated so they visually sit in the chair
-    const sittingOffset = ch.state === CharacterState.TYPE ? CHARACTER_SITTING_OFFSET_PX : 0;
+    // Sitting offset: shift character down when seated (TYPE or SLEEP) so they visually sit in the chair
+    const sittingOffset =
+      ch.state === CharacterState.TYPE || ch.state === CharacterState.SLEEP
+        ? CHARACTER_SITTING_OFFSET_PX
+        : 0;
     // Anchor at bottom-center of character — round to integer device pixels
     const drawX = Math.round(offsetX + ch.x * zoom - cached.width / 2);
     const drawY = Math.round(offsetY + (ch.y + sittingOffset) * zoom - cached.height);
@@ -494,22 +498,31 @@ function renderBubbles(
   zoom: number,
 ): void {
   for (const ch of characters) {
-    if (!ch.bubbleType) continue;
-
-    const sprite =
-      ch.bubbleType === 'permission' ? BUBBLE_PERMISSION_SPRITE : BUBBLE_WAITING_SPRITE;
-
-    // Compute opacity: permission = full, waiting = fade in last 0.5s
+    let sprite: SpriteData | null = null;
     let alpha = 1.0;
-    if (ch.bubbleType === 'waiting' && ch.bubbleTimer < BUBBLE_FADE_DURATION_SEC) {
-      alpha = ch.bubbleTimer / BUBBLE_FADE_DURATION_SEC;
+
+    if (ch.bubbleType === 'permission') {
+      sprite = BUBBLE_PERMISSION_SPRITE;
+    } else if (ch.bubbleType === 'waiting') {
+      sprite = BUBBLE_WAITING_SPRITE;
+      if (ch.bubbleTimer < BUBBLE_FADE_DURATION_SEC) {
+        alpha = ch.bubbleTimer / BUBBLE_FADE_DURATION_SEC;
+      }
+    } else if (ch.state === CharacterState.SLEEP) {
+      // Show Zzz only when no other bubble is active
+      sprite = BUBBLE_SLEEPING_SPRITE;
     }
+
+    if (!sprite) continue;
 
     const cached = getCachedSprite(sprite, zoom);
     // Position: centered above the character's head
     // Character is anchored bottom-center at (ch.x, ch.y), sprite is 16x24
     // Place bubble above head with a small gap; follow sitting offset
-    const sittingOff = ch.state === CharacterState.TYPE ? BUBBLE_SITTING_OFFSET_PX : 0;
+    const sittingOff =
+      ch.state === CharacterState.TYPE || ch.state === CharacterState.SLEEP
+        ? BUBBLE_SITTING_OFFSET_PX
+        : 0;
     const bubbleX = Math.round(offsetX + ch.x * zoom - cached.width / 2);
     const bubbleY = Math.round(
       offsetY + (ch.y + sittingOff - BUBBLE_VERTICAL_OFFSET_PX) * zoom - cached.height - 1 * zoom,
