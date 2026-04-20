@@ -6,6 +6,9 @@ import {
   BUBBLE_SITTING_OFFSET_PX,
   BUBBLE_VERTICAL_OFFSET_PX,
   SLEEP_PULSE_PERIOD_SEC,
+  TOOL_ICON_FLOAT_AMPLITUDE_PX,
+  TOOL_ICON_FLOAT_PERIOD_SEC,
+  TOOL_ICON_VERTICAL_OFFSET_PX,
   WAKE_DURATION_SEC,
   BUTTON_ICON_COLOR,
   BUTTON_ICON_SIZE_FACTOR,
@@ -45,7 +48,9 @@ import {
   BUBBLE_SLEEPING_SPRITE,
   BUBBLE_WAITING_SPRITE,
   getCharacterSprites,
+  getToolIconSprite,
 } from '../sprites/spriteData.js';
+import { getToolIconCategory } from '../toolUtils.js';
 import type {
   Character,
   FurnitureInstance,
@@ -561,6 +566,44 @@ function renderBubbles(
   }
 }
 
+// ── Floating tool icons ─────────────────────────────────────────
+
+function renderToolIcons(
+  ctx: CanvasRenderingContext2D,
+  characters: Character[],
+  offsetX: number,
+  offsetY: number,
+  zoom: number,
+): void {
+  const time = Date.now() / 1000;
+
+  for (const ch of characters) {
+    if (ch.state !== CharacterState.TYPE) continue;
+    if (ch.bubbleType !== null) continue;
+    if (ch.matrixEffect) continue;
+
+    const category = getToolIconCategory(ch.currentTool);
+    if (!category) continue;
+
+    const sprite = getToolIconSprite(category);
+    const cached = getCachedSprite(sprite, zoom);
+
+    const floatPx =
+      Math.sin(((time / TOOL_ICON_FLOAT_PERIOD_SEC) * Math.PI * 2)) *
+      TOOL_ICON_FLOAT_AMPLITUDE_PX;
+
+    const iconX = Math.round(offsetX + ch.x * zoom - cached.width / 2);
+    const iconY = Math.round(
+      offsetY +
+        (ch.y + BUBBLE_SITTING_OFFSET_PX - TOOL_ICON_VERTICAL_OFFSET_PX + floatPx) * zoom -
+        cached.height -
+        1 * zoom,
+    );
+
+    ctx.drawImage(cached, iconX, iconY);
+  }
+}
+
 export interface ButtonBounds {
   /** Center X in device pixels */
   cx: number;
@@ -663,6 +706,9 @@ export function renderFrame(
 
   // Speech bubbles (always on top of characters)
   renderBubbles(ctx, characters, offsetX, offsetY, zoom);
+
+  // Floating tool-category icons (below bubbles, above characters)
+  renderToolIcons(ctx, characters, offsetX, offsetY, zoom);
 
   // Editor overlays
   if (editor) {

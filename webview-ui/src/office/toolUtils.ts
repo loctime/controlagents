@@ -1,3 +1,22 @@
+export type ToolIconCategory = 'write' | 'bash' | 'read' | 'web' | 'task';
+
+const TOOL_ICON_MAP: Record<string, ToolIconCategory> = {
+  Write: 'write',
+  Edit: 'write',
+  Bash: 'bash',
+  Read: 'read',
+  Grep: 'read',
+  Glob: 'read',
+  WebFetch: 'web',
+  WebSearch: 'web',
+  Task: 'task',
+};
+
+export function getToolIconCategory(toolName: string | null): ToolIconCategory | null {
+  if (!toolName) return null;
+  return TOOL_ICON_MAP[toolName] ?? null;
+}
+
 /** Map status prefixes back to tool names for animation selection */
 const STATUS_TO_TOOL: Record<string, string> = {
   Reading: 'Read',

@@ -122,6 +122,11 @@ export const PERMISSION_VOLUME = 0.12;
 // ── Furniture Animation ─────────────────────────────────────
 export const FURNITURE_ANIM_INTERVAL_SEC = 0.2;
 
+// ── Tool Icons (floating mini-icons above active characters) ─
+export const TOOL_ICON_VERTICAL_OFFSET_PX = 24;
+export const TOOL_ICON_FLOAT_AMPLITUDE_PX = 2;
+export const TOOL_ICON_FLOAT_PERIOD_SEC = 2.5;
+
 // ── Version Notice ──────────────────────────────────────────
 export const WHATS_NEW_AUTO_CLOSE_MS = 20000;
 export const WHATS_NEW_FADE_MS = 1000;
