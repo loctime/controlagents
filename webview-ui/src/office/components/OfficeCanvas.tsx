@@ -39,6 +39,7 @@ interface OfficeCanvasProps {
   zoom: number;
   onZoomChange: (zoom: number) => void;
   panRef: React.MutableRefObject<{ x: number; y: number }>;
+  showNameLabels: boolean;
 }
 
 export function OfficeCanvas({
@@ -56,6 +57,7 @@ export function OfficeCanvas({
   zoom,
   onZoomChange,
   panRef,
+  showNameLabels,
 }: OfficeCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -267,6 +269,7 @@ export function OfficeCanvas({
           officeState.getLayout().tileColors,
           officeState.getLayout().cols,
           officeState.getLayout().rows,
+          showNameLabels,
         );
         offsetRef.current = { x: offsetX, y: offsetY };
 
