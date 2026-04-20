@@ -170,22 +170,6 @@ function App() {
 
   return (
     <div ref={containerRef} className="w-full h-full relative overflow-hidden">
-      <div
-        style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          background: 'red',
-          color: 'white',
-          fontSize: '24px',
-          padding: '20px',
-          zIndex: 9999,
-          fontWeight: 'bold',
-        }}
-      >
-        🚨 CODIGO NUEVO CARGADO 🚨
-      </div>
       <OfficeCanvas
         officeState={officeState}
         onClick={handleClick}
@@ -201,6 +185,7 @@ function App() {
         zoom={editor.zoom}
         onZoomChange={editor.handleZoomChange}
         panRef={editor.panRef}
+        showNameLabels={alwaysShowOverlay}
       />
 
       {!isDebugMode ? (
@@ -263,7 +248,6 @@ function App() {
             zoom={editor.zoom}
             panRef={editor.panRef}
             onCloseAgent={handleCloseAgent}
-            alwaysShowOverlay={alwaysShowOverlay}
           />
         </>
       ) : (
