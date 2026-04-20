@@ -106,8 +106,7 @@ test('CUSHIONED_CHAIR catalog entries have agentZone: main', async () => {
   const server = await startDevServer('/', 5183);
   const url = serverUrl(server);
   try {
-    const res = await fetch(assetUrl(url, '/', 'furniture-catalog.json'));
-    const catalog = (await res.json()) as CatalogEntry[];
+    const catalog = await fetchJson<CatalogEntry[]>(assetUrl(url, '/', 'furniture-catalog.json'));
     const cushionedChairs = catalog.filter((e) => e.id.startsWith('CUSHIONED_CHAIR'));
     assert.ok(cushionedChairs.length > 0, 'Expected CUSHIONED_CHAIR entries in catalog');
     for (const entry of cushionedChairs) {
