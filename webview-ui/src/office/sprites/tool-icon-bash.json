@@ -1,0 +1,22 @@
+{
+  "name": "tool-icon-bash",
+  "description": "Terminal icon: green screen with '>' prompt and cursor, for Bash tool (9x9)",
+  "palette": {
+    "_": "",
+    "B": "#116611",
+    "K": "#001800",
+    "G": "#33CC33",
+    "A": "#88EE88"
+  },
+  "pixels": [
+    ["B","B","B","B","B","B","B","B","B"],
+    ["B","G","K","K","K","K","K","K","B"],
+    ["B","K","G","K","K","K","K","K","B"],
+    ["B","K","K","G","K","A","A","K","B"],
+    ["B","K","G","K","K","K","K","K","B"],
+    ["B","G","K","K","K","K","K","K","B"],
+    ["B","K","K","K","K","K","K","K","B"],
+    ["B","B","B","B","B","B","B","B","B"],
+    ["_","_","_","_","_","_","_","_","_"]
+  ]
+}

@@ -7,6 +7,12 @@ import bubbleAlertData from './bubble-alert.json';
 import bubblePermissionData from './bubble-permission.json';
 import bubbleSleepingData from './bubble-sleeping.json';
 import bubbleWaitingData from './bubble-waiting.json';
+import toolIconBashData from './tool-icon-bash.json';
+import toolIconReadData from './tool-icon-read.json';
+import toolIconTaskData from './tool-icon-task.json';
+import toolIconWebData from './tool-icon-web.json';
+import toolIconWriteData from './tool-icon-write.json';
+import type { ToolIconCategory } from '../toolUtils.js';
 
 // ── Speech Bubble Sprites ───────────────────────────────────────
 
@@ -30,6 +36,26 @@ export const BUBBLE_SLEEPING_SPRITE: SpriteData = resolveBubbleSprite(bubbleSlee
 
 /** Alert bubble: red square with white "!" — urgent permission request (11x13) */
 export const BUBBLE_ALERT_SPRITE: SpriteData = resolveBubbleSprite(bubbleAlertData);
+
+// ── Tool Icon Sprites ───────────────────────────────────────────
+
+const TOOL_ICON_WRITE_SPRITE: SpriteData = resolveBubbleSprite(toolIconWriteData);
+const TOOL_ICON_BASH_SPRITE: SpriteData = resolveBubbleSprite(toolIconBashData);
+const TOOL_ICON_READ_SPRITE: SpriteData = resolveBubbleSprite(toolIconReadData);
+const TOOL_ICON_WEB_SPRITE: SpriteData = resolveBubbleSprite(toolIconWebData);
+const TOOL_ICON_TASK_SPRITE: SpriteData = resolveBubbleSprite(toolIconTaskData);
+
+const TOOL_ICON_SPRITES: Record<ToolIconCategory, SpriteData> = {
+  write: TOOL_ICON_WRITE_SPRITE,
+  bash: TOOL_ICON_BASH_SPRITE,
+  read: TOOL_ICON_READ_SPRITE,
+  web: TOOL_ICON_WEB_SPRITE,
+  task: TOOL_ICON_TASK_SPRITE,
+};
+
+export function getToolIconSprite(category: ToolIconCategory): SpriteData {
+  return TOOL_ICON_SPRITES[category];
+}
 
 // ════════════════════════════════════════════════════════════════
 // Loaded character sprites (from PNG assets)
