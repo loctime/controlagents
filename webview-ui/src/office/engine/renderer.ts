@@ -24,6 +24,11 @@ import {
   GHOST_VALID_TINT,
   GRID_LINE_COLOR,
   HOVERED_OUTLINE_ALPHA,
+  NAME_LABEL_COLOR,
+  NAME_LABEL_FONT_SIZE_BASE,
+  NAME_LABEL_STROKE_COLOR,
+  NAME_LABEL_STROKE_WIDTH,
+  NAME_LABEL_VERTICAL_OFFSET_PX,
   OUTLINE_Z_SORT_OFFSET,
   ROTATE_BUTTON_BG,
   SEAT_AVAILABLE_COLOR,
@@ -504,6 +509,50 @@ function renderRotateButton(
   return { cx, cy, radius };
 }
 
+// ── Name labels ─────────────────────────────────────────────────
+
+function getCharacterLabel(ch: Character): string | null {
+  if (ch.isSubagent) return null;
+  if (ch.teamName) return ch.isTeamLead ? (ch.teamName ?? 'LEAD') : (ch.agentName ?? null);
+  return ch.folderName ?? null;
+}
+
+function renderNameLabels(
+  ctx: CanvasRenderingContext2D,
+  characters: Character[],
+  offsetX: number,
+  offsetY: number,
+  zoom: number,
+): void {
+  const fontSize = Math.max(8, Math.round(NAME_LABEL_FONT_SIZE_BASE * zoom));
+  ctx.save();
+  ctx.font = `${fontSize}px "FS Pixel Sans", monospace`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'bottom';
+  ctx.lineJoin = 'round';
+  ctx.lineWidth = NAME_LABEL_STROKE_WIDTH;
+  ctx.strokeStyle = NAME_LABEL_STROKE_COLOR;
+  ctx.fillStyle = NAME_LABEL_COLOR;
+
+  for (const ch of characters) {
+    if (ch.matrixEffect === 'despawn') continue;
+    const label = getCharacterLabel(ch);
+    if (!label) continue;
+
+    const sittingOff =
+      ch.state === CharacterState.TYPE || ch.state === CharacterState.SLEEP
+        ? CHARACTER_SITTING_OFFSET_PX
+        : 0;
+    const x = Math.round(offsetX + ch.x * zoom);
+    const y = Math.round(offsetY + (ch.y + sittingOff - NAME_LABEL_VERTICAL_OFFSET_PX) * zoom);
+
+    ctx.strokeText(label, x, y);
+    ctx.fillText(label, x, y);
+  }
+
+  ctx.restore();
+}
+
 // ── Speech bubbles ──────────────────────────────────────────────
 
 function renderBubbles(
@@ -663,6 +712,7 @@ export function renderFrame(
   tileColors?: Array<ColorValue | null>,
   layoutCols?: number,
   layoutRows?: number,
+  showNameLabels?: boolean,
 ): { offsetX: number; offsetY: number } {
   // Clear
   ctx.clearRect(0, 0, canvasWidth, canvasHeight);
@@ -702,6 +752,11 @@ export function renderFrame(
   const selectedId = selection?.selectedAgentId ?? null;
   const hoveredId = selection?.hoveredAgentId ?? null;
   renderScene(ctx, allFurniture, characters, offsetX, offsetY, zoom, selectedId, hoveredId);
+
+  // Name labels (always below bubbles)
+  if (showNameLabels) {
+    renderNameLabels(ctx, characters, offsetX, offsetY, zoom);
+  }
 
   // Speech bubbles (always on top of characters)
   renderBubbles(ctx, characters, offsetX, offsetY, zoom);
