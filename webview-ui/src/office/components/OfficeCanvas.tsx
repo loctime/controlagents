@@ -679,11 +679,10 @@ export function OfficeCanvas({
         // Toggle selection: click same agent deselects, different agent selects
         if (officeState.selectedAgentId === hitId) {
           officeState.selectedAgentId = null;
-          officeState.cameraFollowId = null;
         } else {
           officeState.selectedAgentId = hitId;
-          officeState.cameraFollowId = hitId;
         }
+        officeState.cameraFollowId = null;
         onClick(hitId); // still focus terminal
         return;
       }

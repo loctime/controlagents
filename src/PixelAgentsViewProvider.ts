@@ -370,6 +370,33 @@ export class PixelAgentsViewProvider implements vscode.WebviewViewProvider {
             if (lead?.terminalRef) {
               lead.terminalRef.show();
             }
+          } else {
+            // External agent with no bound terminal (e.g. created from a
+            // terminal whose cwd was outside this workspace). Try to adopt
+            // a Claude-named terminal that isn't owned by any other agent,
+            // preferring the currently active one.
+            const owned = new Set<vscode.Terminal>();
+            for (const a of this.agents.values()) {
+              if (a.terminalRef) owned.add(a.terminalRef);
+            }
+            const isClaudeTerm = (t: vscode.Terminal) =>
+              /^claude/i.test(t.name) && t.exitStatus === undefined;
+            const active = vscode.window.activeTerminal;
+            let candidate: vscode.Terminal | undefined =
+              active && isClaudeTerm(active) && !owned.has(active) ? active : undefined;
+            if (!candidate) {
+              for (const t of vscode.window.terminals) {
+                if (isClaudeTerm(t) && !owned.has(t)) {
+                  candidate = t;
+                  break;
+                }
+              }
+            }
+            if (candidate) {
+              agent.terminalRef = candidate;
+              this.persistAgents();
+              candidate.show();
+            }
           }
         }
       } else if (message.type === 'closeAgent') {
