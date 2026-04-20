@@ -8,6 +8,7 @@
   "canPlaceOnWalls": false,
   "canPlaceOnSurfaces": false,
   "backgroundTiles": 0,
+  "agentZone": "main",
   "members": [
     {
       "type": "asset",

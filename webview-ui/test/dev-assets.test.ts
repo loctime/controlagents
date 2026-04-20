@@ -101,3 +101,23 @@ test('asset-index.json is accessible with a subpath (base: /sub/)', async () => 
     await server.close();
   }
 });
+
+test('CUSHIONED_CHAIR catalog entries have agentZone: main', async () => {
+  const server = await startDevServer('/', 5183);
+  const url = serverUrl(server);
+  try {
+    const res = await fetch(assetUrl(url, '/', 'furniture-catalog.json'));
+    const catalog = (await res.json()) as CatalogEntry[];
+    const cushionedChairs = catalog.filter((e) => e.id.startsWith('CUSHIONED_CHAIR'));
+    assert.ok(cushionedChairs.length > 0, 'Expected CUSHIONED_CHAIR entries in catalog');
+    for (const entry of cushionedChairs) {
+      assert.equal(
+        entry.agentZone,
+        'main',
+        `Expected agentZone 'main' on ${entry.id}, got ${entry.agentZone}`,
+      );
+    }
+  } finally {
+    await server.close();
+  }
+});
