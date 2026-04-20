@@ -161,3 +161,10 @@ export const FUEL_COLOR_CRITICAL = '#ff2222';
 export const FUEL_GAUGE_BG = '#222';
 export const TEAM_LEAD_COLOR = '#ffd700';
 export const TEAM_ROLE_COLOR = '#66aaff';
+
+// ── Name Labels (canvas name tags above characters) ────────
+export const NAME_LABEL_COLOR = '#66aaff';
+export const NAME_LABEL_STROKE_COLOR = 'white';
+export const NAME_LABEL_STROKE_WIDTH = 2;
+export const NAME_LABEL_FONT_SIZE_BASE = 5; // multiplied by zoom; clamped to min 8px
+export const NAME_LABEL_VERTICAL_OFFSET_PX = 18; // px above ch.y in sprite coords
