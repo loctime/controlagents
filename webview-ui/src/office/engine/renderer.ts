@@ -513,7 +513,7 @@ function renderRotateButton(
 
 function getCharacterLabel(ch: Character): string | null {
   if (ch.isSubagent) return null;
-  if (ch.teamName) return ch.isTeamLead ? (ch.teamName ?? 'LEAD') : (ch.agentName ?? null);
+  if (ch.teamName) return ch.isTeamLead ? ch.teamName : (ch.agentName ?? null);
   return ch.folderName ?? null;
 }
 
