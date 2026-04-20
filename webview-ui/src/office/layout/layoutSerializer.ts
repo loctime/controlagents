@@ -221,6 +221,7 @@ export function layoutToSeats(furniture: PlacedFurniture[]): Map<string, Seat> {
           seatRow: tileRow,
           facingDir,
           assigned: false,
+          ...(entry.agentZone ? { agentZone: entry.agentZone } : {}),
         });
         seatCount++;
       }

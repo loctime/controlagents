@@ -20,6 +20,7 @@ export interface LoadedAssetData {
     rotationScheme?: string;
     animationGroup?: string;
     frame?: number;
+    agentZone?: 'main' | 'subagent';
   }>;
   sprites: Record<string, SpriteData>;
 }
@@ -98,6 +99,7 @@ export function buildDynamicCatalog(assets: LoadedAssetData): boolean {
         ...(asset.backgroundTiles ? { backgroundTiles: asset.backgroundTiles } : {}),
         ...(asset.canPlaceOnWalls ? { canPlaceOnWalls: true } : {}),
         ...(asset.mirrorSide ? { mirrorSide: true } : {}),
+        ...(asset.agentZone ? { agentZone: asset.agentZone } : {}),
       };
     })
     .filter((e): e is CatalogEntryWithCategory => e !== null);

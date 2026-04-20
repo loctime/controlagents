@@ -57,6 +57,8 @@ export interface Seat {
   /** Direction character faces when sitting (toward adjacent desk) */
   facingDir: Direction;
   assigned: boolean;
+  /** Which agent type this seat is reserved for. Absent = any agent. */
+  agentZone?: 'main' | 'subagent';
 }
 
 export interface FurnitureInstance {
@@ -107,6 +109,8 @@ export interface FurnitureCatalogEntry {
   canPlaceOnWalls?: boolean;
   /** Whether this is a side-oriented asset that produces a mirrored "left" variant */
   mirrorSide?: boolean;
+  /** Which agent type can occupy seats of this furniture type. Absent = any agent. */
+  agentZone?: 'main' | 'subagent';
 }
 
 export interface PlacedFurniture {
