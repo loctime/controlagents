@@ -11,6 +11,7 @@ import {
   INACTIVE_SEAT_TIMER_MIN_SEC,
   INACTIVE_SEAT_TIMER_RANGE_SEC,
   WAITING_BUBBLE_DURATION_SEC,
+  WAKE_DURATION_SEC,
 } from '../../constants.js';
 import { getAnimationFrames, getCatalogEntry, getOnStateType } from '../layout/furnitureCatalog.js';
 import {
@@ -174,7 +175,11 @@ export class OfficeState {
     return result;
   }
 
-  private findFreeSeat(): string | null {
+  private findFreeSeat(zone?: 'main' | 'subagent'): string | null {
+    return this.findFreeSeatsFiltered(zone) ?? this.findFreeSeatsFiltered(undefined);
+  }
+
+  private findFreeSeatsFiltered(zone: 'main' | 'subagent' | undefined): string | null {
     // Build set of tiles occupied by electronics (PCs, monitors, etc.)
     const electronicsTiles = new Set<string>();
     for (const item of this.layout.furniture) {
@@ -187,13 +192,12 @@ export class OfficeState {
       }
     }
 
-    // Collect free seats, split into those facing electronics and the rest
     const pcSeats: string[] = [];
     const otherSeats: string[] = [];
     for (const [uid, seat] of this.seats) {
       if (seat.assigned) continue;
+      if (zone && seat.agentZone && seat.agentZone !== zone) continue;
 
-      // Check if this seat faces electronics (same logic as auto-state detection)
       let facesPC = false;
       const dCol =
         seat.facingDir === Direction.RIGHT ? 1 : seat.facingDir === Direction.LEFT ? -1 : 0;
@@ -226,7 +230,6 @@ export class OfficeState {
       (facesPC ? pcSeats : otherSeats).push(uid);
     }
 
-    // Pick randomly: prefer PC seats, then any seat
     if (pcSeats.length > 0) return pcSeats[Math.floor(Math.random() * pcSeats.length)];
     if (otherSeats.length > 0) return otherSeats[Math.floor(Math.random() * otherSeats.length)];
     return null;
@@ -290,7 +293,7 @@ export class OfficeState {
       }
     }
     if (!seatId) {
-      seatId = this.findFreeSeat();
+      seatId = this.findFreeSeat('main');
     }
 
     let ch: Character;
@@ -442,39 +445,45 @@ export class OfficeState {
     const palette = parentCh ? parentCh.palette : 0;
     const hueShift = parentCh ? parentCh.hueShift : 0;
 
-    // Find the closest walkable tile to the parent, avoiding tiles occupied by other characters
-    const parentCol = parentCh ? parentCh.tileCol : 0;
-    const parentRow = parentCh ? parentCh.tileRow : 0;
-    const dist = (c: number, r: number) => Math.abs(c - parentCol) + Math.abs(r - parentRow);
+    // Try to assign a subagent seat
+    const seatId = this.findFreeSeat('subagent');
+    let ch: Character;
 
-    // Build set of tiles occupied by existing characters
-    const occupiedTiles = new Set<string>();
-    for (const [, other] of this.characters) {
-      occupiedTiles.add(`${other.tileCol},${other.tileRow}`);
-    }
-
-    let spawn = { col: parentCol, row: parentRow };
-    if (this.walkableTiles.length > 0) {
-      let closest = this.walkableTiles[0];
-      let closestDist = Infinity;
-      for (const tile of this.walkableTiles) {
-        if (occupiedTiles.has(`${tile.col},${tile.row}`)) continue;
-        const d = dist(tile.col, tile.row);
-        if (d < closestDist) {
-          closest = tile;
-          closestDist = d;
-        }
+    if (seatId) {
+      const seat = this.seats.get(seatId)!;
+      seat.assigned = true;
+      ch = createCharacter(id, palette, seatId, seat, hueShift);
+    } else {
+      // Fallback: spawn at closest free walkable tile to parent
+      const parentCol = parentCh ? parentCh.tileCol : 0;
+      const parentRow = parentCh ? parentCh.tileRow : 0;
+      const dist = (c: number, r: number) => Math.abs(c - parentCol) + Math.abs(r - parentRow);
+      const occupiedTiles = new Set<string>();
+      for (const [, other] of this.characters) {
+        occupiedTiles.add(`${other.tileCol},${other.tileRow}`);
       }
-      spawn = closest;
+      let spawn = { col: parentCol, row: parentRow };
+      if (this.walkableTiles.length > 0) {
+        let closest = this.walkableTiles[0];
+        let closestDist = Infinity;
+        for (const tile of this.walkableTiles) {
+          if (occupiedTiles.has(`${tile.col},${tile.row}`)) continue;
+          const d = dist(tile.col, tile.row);
+          if (d < closestDist) {
+            closest = tile;
+            closestDist = d;
+          }
+        }
+        spawn = closest;
+      }
+      ch = createCharacter(id, palette, null, null, hueShift);
+      ch.x = spawn.col * TILE_SIZE + TILE_SIZE / 2;
+      ch.y = spawn.row * TILE_SIZE + TILE_SIZE / 2;
+      ch.tileCol = spawn.col;
+      ch.tileRow = spawn.row;
+      if (parentCh) ch.dir = parentCh.dir;
     }
 
-    const ch = createCharacter(id, palette, null, null, hueShift);
-    ch.x = spawn.col * TILE_SIZE + TILE_SIZE / 2;
-    ch.y = spawn.row * TILE_SIZE + TILE_SIZE / 2;
-    ch.tileCol = spawn.col;
-    ch.tileRow = spawn.row;
-    // Face the same direction as the parent agent
-    if (parentCh) ch.dir = parentCh.dir;
     ch.isSubagent = true;
     ch.parentAgentId = parentAgentId;
     ch.matrixEffect = 'spawn';
@@ -568,6 +577,26 @@ export class OfficeState {
         ch.seatTimer = -1;
         ch.path = [];
         ch.moveProgress = 0;
+      } else if (
+        (ch.state === CharacterState.IDLE || ch.state === CharacterState.WALK) &&
+        ch.seatId
+      ) {
+        // Character was wandering when turn resumed — snap to seat and wake up
+        // instead of running back, which looks jarring for short distances.
+        const seat = this.seats.get(ch.seatId);
+        if (seat) {
+          ch.tileCol = seat.seatCol;
+          ch.tileRow = seat.seatRow;
+          ch.x = seat.seatCol * TILE_SIZE + TILE_SIZE / 2;
+          ch.y = seat.seatRow * TILE_SIZE + TILE_SIZE / 2;
+          ch.path = [];
+          ch.moveProgress = 0;
+          ch.dir = seat.facingDir;
+          ch.state = CharacterState.WAKE;
+          ch.frame = 0;
+          ch.frameTimer = 0;
+          ch.seatTimer = WAKE_DURATION_SEC;
+        }
       }
       this.rebuildFurnitureInstances();
     }
