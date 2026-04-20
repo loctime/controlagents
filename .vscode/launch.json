@@ -11,7 +11,7 @@
       "request": "launch",
       "args": [
         "--extensionDevelopmentPath=${workspaceFolder}",
-        "--folder-uri=vscode-fileUri:///C:/Users/User/Desktop/Proyectos/controlAgents/pixel-agents"
+        "--folder-uri=${workspaceFolder}"
       ],
       "outFiles": [
         "${workspaceFolder}/dist/**/*.js"

@@ -859,6 +859,7 @@ export function adoptExternalSessionFromHook(
       webview,
       persistAgents,
       folderName,
+      cwd,
     );
 
     const adoptedAgent = [...agents.values()].find((a) => a.jsonlFile === transcriptPath);
@@ -927,6 +928,7 @@ function adoptExternalSession(
   webview: vscode.Webview | undefined,
   persistAgents: () => void,
   folderName?: string,
+  cwd?: string,
 ): void {
   const id = nextAgentIdRef.current++;
   // Skip to end of file -- only show live activity going forward, not replay history
@@ -943,6 +945,7 @@ function adoptExternalSession(
     terminalRef: undefined,
     isExternal: true,
     projectDir,
+    cwd,
     jsonlFile,
     fileOffset,
     lineBuffer: '',

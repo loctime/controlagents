@@ -8,6 +8,8 @@ export interface AgentState {
   /** Whether this agent was detected from an external source (VS Code extension panel, etc.) */
   isExternal: boolean;
   projectDir: string;
+  /** Working directory where Claude was launched (used to bind external terminals) */
+  cwd?: string;
   jsonlFile: string;
   fileOffset: number;
   lineBuffer: string;

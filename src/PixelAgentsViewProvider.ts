@@ -161,7 +161,10 @@ export class PixelAgentsViewProvider implements vscode.WebviewViewProvider {
           this.permissionTimers,
           this.webview,
           this.persistAgents,
-          (agent) => this.registerAgentHook(agent),
+          (agent) => {
+            this.registerAgentHook(agent);
+            this.tryBindExternalAgentTerminal(agent.id, cwd);
+          },
         );
       },
       onSessionClear: (agentId, newSessionId, newTranscriptPath) => {
@@ -371,32 +374,8 @@ export class PixelAgentsViewProvider implements vscode.WebviewViewProvider {
               lead.terminalRef.show();
             }
           } else {
-            // External agent with no bound terminal (e.g. created from a
-            // terminal whose cwd was outside this workspace). Try to adopt
-            // a Claude-named terminal that isn't owned by any other agent,
-            // preferring the currently active one.
-            const owned = new Set<vscode.Terminal>();
-            for (const a of this.agents.values()) {
-              if (a.terminalRef) owned.add(a.terminalRef);
-            }
-            const isClaudeTerm = (t: vscode.Terminal) =>
-              /^claude/i.test(t.name) && t.exitStatus === undefined;
-            const active = vscode.window.activeTerminal;
-            let candidate: vscode.Terminal | undefined =
-              active && isClaudeTerm(active) && !owned.has(active) ? active : undefined;
-            if (!candidate) {
-              for (const t of vscode.window.terminals) {
-                if (isClaudeTerm(t) && !owned.has(t)) {
-                  candidate = t;
-                  break;
-                }
-              }
-            }
-            if (candidate) {
-              agent.terminalRef = candidate;
-              this.persistAgents();
-              candidate.show();
-            }
+            this.tryBindExternalAgentTerminal(agent.id, agent.cwd);
+            (agent.terminalRef as vscode.Terminal | undefined)?.show();
           }
         }
       } else if (message.type === 'closeAgent') {
@@ -818,6 +797,14 @@ export class PixelAgentsViewProvider implements vscode.WebviewViewProvider {
       }
     });
 
+    vscode.window.onDidOpenTerminal(() => {
+      for (const [id, agent] of this.agents) {
+        if (!agent.terminalRef && agent.isExternal) {
+          this.tryBindExternalAgentTerminal(id, agent.cwd);
+        }
+      }
+    });
+
     vscode.window.onDidChangeActiveTerminal((terminal) => {
       this.activeAgentId.current = null;
       if (!terminal) return;
@@ -857,6 +844,40 @@ export class PixelAgentsViewProvider implements vscode.WebviewViewProvider {
         }
       }
     });
+  }
+
+  /** Attempt to bind an unbound external agent to a free "claude" terminal.
+   *  If cwd is provided, prefers terminals whose shell integration CWD matches. */
+  private tryBindExternalAgentTerminal(agentId: number, cwd?: string): boolean {
+    const agent = this.agents.get(agentId);
+    if (!agent || agent.terminalRef) return false;
+
+    const owned = new Set<vscode.Terminal>();
+    for (const a of this.agents.values()) {
+      if (a.terminalRef) owned.add(a.terminalRef);
+    }
+
+    const isClaudeTerm = (t: vscode.Terminal) =>
+      /^claude/i.test(t.name) && t.exitStatus === undefined;
+
+    let candidates = vscode.window.terminals.filter((t) => isClaudeTerm(t) && !owned.has(t));
+    if (candidates.length === 0) return false;
+
+    if (cwd && candidates.length > 1) {
+      const cwdNorm = path.normalize(cwd).toLowerCase();
+      const cwdMatches = candidates.filter((t) => {
+        const termCwd = t.shellIntegration?.cwd?.fsPath;
+        return termCwd && path.normalize(termCwd).toLowerCase() === cwdNorm;
+      });
+      if (cwdMatches.length > 0) candidates = cwdMatches;
+    }
+
+    const active = vscode.window.activeTerminal;
+    const candidate = active && candidates.includes(active) ? active : candidates[0];
+
+    agent.terminalRef = candidate;
+    this.persistAgents();
+    return true;
   }
 
   /** Export current saved layout as a versioned default-layout-{N}.json (dev utility) */

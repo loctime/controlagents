@@ -347,6 +347,15 @@ export class HookEventHandler {
         }
         return this.handleTeammateIdle(event, agent, agentId, webview);
       case 'userTurn':
+        // User submitted a response — clear waiting state immediately so the
+        // character walks back to their desk before the first tool fires.
+        if (agent.isWaiting) {
+          cancelWaitingTimer(agentId, this.waitingTimers);
+          agent.isWaiting = false;
+          agent.permissionSent = false;
+          webview?.postMessage({ type: 'agentStatus', id: agentId, status: 'active' });
+        }
+        return;
       case 'progress':
         // Not yet consumed by the office visualization. Silently drop.
         return;
