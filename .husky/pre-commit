@@ -6,7 +6,7 @@ set -e
 
 echo "🔒 Scanning staged files for secrets..."
 
-if ! command -v gitleaks > /dev/null 2>&1; then
+if ! [ -f "C:\Users\User\AppData\Local\Microsoft\WinGet\Packages\Gitleaks.Gitleaks_Microsoft.Winget.Source_8wekyb3d8bbwe\gitleaks.exe" ]; then
   echo ""
   echo "❌ gitleaks is not installed!"
   echo ""
@@ -22,7 +22,7 @@ if ! command -v gitleaks > /dev/null 2>&1; then
 fi
 
 # Run gitleaks on staged files only
-gitleaks protect --staged --verbose
+"C:\Users\User\AppData\Local\Microsoft\WinGet\Packages\Gitleaks.Gitleaks_Microsoft.Winget.Source_8wekyb3d8bbwe\gitleaks.exe" protect --staged --verbose
 
 if [ $? -ne 0 ]; then
   echo ""

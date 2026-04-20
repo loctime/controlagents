@@ -676,7 +676,14 @@ export class OfficeState {
             const seat = this.seats.get(ch.seatId);
             if (seat) {
               const path = this.withOwnSeatUnblocked(ch, () =>
-                findPath(ch.tileCol, ch.tileRow, seat.seatCol, seat.seatRow, this.tileMap, this.blockedTiles),
+                findPath(
+                  ch.tileCol,
+                  ch.tileRow,
+                  seat.seatCol,
+                  seat.seatRow,
+                  this.tileMap,
+                  this.blockedTiles,
+                ),
               );
               if (path.length > 0) {
                 ch.path = path;

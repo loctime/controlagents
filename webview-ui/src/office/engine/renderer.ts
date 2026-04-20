@@ -5,11 +5,6 @@ import {
   BUBBLE_FADE_DURATION_SEC,
   BUBBLE_SITTING_OFFSET_PX,
   BUBBLE_VERTICAL_OFFSET_PX,
-  SLEEP_PULSE_PERIOD_SEC,
-  TOOL_ICON_FLOAT_AMPLITUDE_PX,
-  TOOL_ICON_FLOAT_PERIOD_SEC,
-  TOOL_ICON_VERTICAL_OFFSET_PX,
-  WAKE_DURATION_SEC,
   BUTTON_ICON_COLOR,
   BUTTON_ICON_SIZE_FACTOR,
   BUTTON_LINE_WIDTH_MIN,
@@ -37,8 +32,13 @@ import {
   SELECTED_OUTLINE_ALPHA,
   SELECTION_DASH_PATTERN,
   SELECTION_HIGHLIGHT_COLOR,
+  SLEEP_PULSE_PERIOD_SEC,
+  TOOL_ICON_FLOAT_AMPLITUDE_PX,
+  TOOL_ICON_FLOAT_PERIOD_SEC,
+  TOOL_ICON_VERTICAL_OFFSET_PX,
   VOID_TILE_DASH_PATTERN,
   VOID_TILE_OUTLINE_COLOR,
+  WAKE_DURATION_SEC,
 } from '../../constants.js';
 import { getColorizedFloorSprite, hasFloorSprites, WALL_COLOR } from '../floorTiles.js';
 import { getCachedSprite, getOutlineSprite } from '../sprites/spriteCache.js';
@@ -531,7 +531,7 @@ function renderBubbles(
       // Zzz pulses between 0.35 and 1.0 with a smooth sine wave
       sprite = BUBBLE_SLEEPING_SPRITE;
       const t = ch.frameTimer / SLEEP_PULSE_PERIOD_SEC;
-      alpha = 0.35 + 0.65 * (1 - Math.cos(t * Math.PI * 2)) / 2;
+      alpha = 0.35 + (0.65 * (1 - Math.cos(t * Math.PI * 2))) / 2;
     } else if (ch.state === CharacterState.WAKE) {
       // Zzz fades out as the agent wakes up
       sprite = BUBBLE_SLEEPING_SPRITE;
@@ -589,8 +589,7 @@ function renderToolIcons(
     const cached = getCachedSprite(sprite, zoom);
 
     const floatPx =
-      Math.sin(((time / TOOL_ICON_FLOAT_PERIOD_SEC) * Math.PI * 2)) *
-      TOOL_ICON_FLOAT_AMPLITUDE_PX;
+      Math.sin((time / TOOL_ICON_FLOAT_PERIOD_SEC) * Math.PI * 2) * TOOL_ICON_FLOAT_AMPLITUDE_PX;
 
     const iconX = Math.round(offsetX + ch.x * zoom - cached.width / 2);
     const iconY = Math.round(

@@ -1,6 +1,7 @@
 import type { ColorValue } from '../../components/ui/types.js';
 import { PALETTE_COUNT } from '../../constants.js';
 import { adjustSprite } from '../colorize.js';
+import type { ToolIconCategory } from '../toolUtils.js';
 import type { Direction, SpriteData } from '../types.js';
 import { Direction as Dir } from '../types.js';
 import bubbleAlertData from './bubble-alert.json';
@@ -12,7 +13,6 @@ import toolIconReadData from './tool-icon-read.json';
 import toolIconTaskData from './tool-icon-task.json';
 import toolIconWebData from './tool-icon-web.json';
 import toolIconWriteData from './tool-icon-write.json';
-import type { ToolIconCategory } from '../toolUtils.js';
 
 // ── Speech Bubble Sprites ───────────────────────────────────────
 

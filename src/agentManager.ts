@@ -82,7 +82,6 @@ export async function launchNewTerminal(
   // This ensures the terminal starts in a predictable location that matches the project
   // dir hash Claude Code will use for JSONL transcript files.
   const cwd = folderPath || folders?.[0]?.uri.fsPath || os.homedir();
-  const isMultiRoot = !!(folders && folders.length > 1);
   const idx = nextTerminalIndexRef.current++;
   const terminal = vscode.window.createTerminal({
     name: `${TERMINAL_NAME_PREFIX} #${idx}`,
