@@ -37,5 +37,6 @@ export interface CatalogEntry {
   mirrorSide?: boolean;
   rotationScheme?: string;
   animationGroup?: string;
+  agentZone?: 'main' | 'subagent';
   frame?: number;
 }

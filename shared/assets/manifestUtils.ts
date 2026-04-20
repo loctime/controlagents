@@ -39,6 +39,7 @@ export interface FurnitureManifest {
   canPlaceOnWalls: boolean;
   canPlaceOnSurfaces: boolean;
   backgroundTiles: number;
+  agentZone?: 'main' | 'subagent';
   // If type is 'asset', these fields are present:
   type: 'asset' | 'group';
   file?: string;
@@ -59,6 +60,7 @@ export interface InheritedProps {
   canPlaceOnWalls: boolean;
   canPlaceOnSurfaces: boolean;
   backgroundTiles: number;
+  agentZone?: 'main' | 'subagent';
   orientation?: string;
   state?: string;
   rotationScheme?: string;
@@ -80,6 +82,7 @@ export interface FurnitureAsset {
   groupId?: string;
   canPlaceOnSurfaces?: boolean;
   backgroundTiles?: number;
+  agentZone?: 'main' | 'subagent';
   orientation?: string;
   state?: string;
   mirrorSide?: boolean;
@@ -113,6 +116,7 @@ export function flattenManifest(node: ManifestNode, inherited: InheritedProps): 
         canPlaceOnWalls: inherited.canPlaceOnWalls,
         canPlaceOnSurfaces: inherited.canPlaceOnSurfaces,
         backgroundTiles: inherited.backgroundTiles,
+        ...(inherited.agentZone ? { agentZone: inherited.agentZone } : {}),
         groupId: inherited.groupId,
         ...(orientation ? { orientation } : {}),
         ...(state ? { state } : {}),

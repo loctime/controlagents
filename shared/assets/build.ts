@@ -62,6 +62,7 @@ export function buildFurnitureCatalog(assetsDir: string): CatalogEntry[] {
           canPlaceOnWalls: manifest.canPlaceOnWalls,
           canPlaceOnSurfaces: manifest.canPlaceOnSurfaces,
           backgroundTiles: manifest.backgroundTiles,
+          ...(manifest.agentZone ? { agentZone: manifest.agentZone } : {}),
           groupId: manifest.id,
         });
       } else {
@@ -74,6 +75,7 @@ export function buildFurnitureCatalog(assetsDir: string): CatalogEntry[] {
           canPlaceOnWalls: manifest.canPlaceOnWalls,
           canPlaceOnSurfaces: manifest.canPlaceOnSurfaces,
           backgroundTiles: manifest.backgroundTiles,
+          ...(manifest.agentZone ? { agentZone: manifest.agentZone } : {}),
           ...(manifest.rotationScheme ? { rotationScheme: manifest.rotationScheme } : {}),
         };
         const rootGroup: ManifestGroup = {
